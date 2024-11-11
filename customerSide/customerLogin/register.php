@@ -6,6 +6,7 @@ session_start();
 // Define variables and initialize them to empty values
 $email = $member_name = $password = $phone_number = "";
 $email_err = $member_name_err = $password_err = $phone_number_err = "";
+$data_privacy_err = "";
 
 // Check if the form was submitted.
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -16,6 +17,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $email_err = "Please enter a valid email. Ex: johndoe@email.com";
     } else {
         $email = trim($_POST["email"]);
+    }
+
+    if (!isset($_POST["data_privacy"])) {
+        $data_privacy_err = "You must agree to the data privacy policy.";
     }
 
     $selectCreatedEmail = "SELECT email from Accounts WHERE email = ?";
@@ -52,6 +57,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $password = trim($_POST["password"]);
     }
 
+    if (empty(trim($_POST["password"]))) {
+        $password_err = "Please enter a password.";
+    } elseif (strlen(trim($_POST["password"])) < 8) {
+        $password_err = "Password must have at least 8 characters.";
+    } elseif (!preg_match('/[A-Z]/', trim($_POST["password"]))) {
+        $password_err = "Password must contain at least one uppercase letter.";
+    } elseif (!preg_match('/[a-z]/', trim($_POST["password"]))) {
+        $password_err = "Password must contain at least one lowercase letter.";
+    } elseif (!preg_match('/[0-9]/', trim($_POST["password"]))) {
+        $password_err = "Password must contain at least one number.";
+    } elseif (!preg_match('/[\W]/', trim($_POST["password"]))) {
+        $password_err = "Password must contain at least one special character.";
+    } else {
+        // Hash the password using bcrypt
+        $password = password_hash(trim($_POST["password"]), PASSWORD_BCRYPT);
+    }
+
     // Validate phone number
     if (empty(trim($_POST["phone_number"]))) {
         $phone_number_err = "Please enter your phone number.";
@@ -62,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Check input errors before inserting into the database
-    if (empty($email_err) && empty($member_name_err) && empty($password_err) && empty($phone_number_err)) {
+    if (empty($email_err) && empty($member_name_err) && empty($password_err) && empty($phone_number_err) && empty($data_privacy_err)) {
         // Start a transaction
         mysqli_begin_transaction($link);
 
@@ -228,9 +250,23 @@ if ($stmt_accounts = mysqli_prepare($link, $sql_accounts)) {
             </div>
 
             <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" name="phone_number" class="form-control" placeholder="Enter Phone Number">
-                                <span class="text-danger"><?php echo $phone_number_err; ?></span>
+                <label for="phone_number" class="form-label">Phone Number:</label>
+                <input type="text" name="phone_number" placeholder="+60101231234" 
+                    class="form-control <?php echo !empty($phone_numberErr) ? 'is-invalid' : ''; ?>" 
+                    id="phone_number" required value="<?php echo $phone_number; ?>" 
+                    pattern="^\+60[0-9]{9,10}$"
+                    id="phone_number" required value="<?php echo $phone_number; ?>"><br>
+                <div id="validationServerFeedback" class="invalid-feedback">
+                    <?php echo $phone_numberErr ?: 'Please provide a valid phone number.'; ?>
+                </div>
+            </div>
+
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" name="data_privacy" id="data_privacy" required>
+                <label class="form-check-label" for="data_privacy">
+                    I agree to the <a href="privacy_policy.php" target="_blank">data privacy policy</a>.
+                </label>
+                <span class="text-danger"><?php echo $data_privacy_err; ?></span>
             </div>
 
             <button style="background-color:black;" class="btn btn-dark" type="submit" name="register" value="Register">Register</button>
