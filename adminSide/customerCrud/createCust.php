@@ -39,6 +39,42 @@ $next_member_id = getNextAvailableMemberID($link);
 
 // Get the next available account ID
 $next_account_id = getNextAvailableAccountID($link);
+
+// Check if form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validate email to ensure it's not already in the database
+    $email = trim($_POST["email"]);
+    $sql = "SELECT account_id FROM Accounts WHERE email = ?";
+    
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        // Bind variables to the prepared statement as parameters
+        mysqli_stmt_bind_param($stmt, "s", $param_email);
+
+        // Set the parameter
+        $param_email = $email;
+
+        // Attempt to execute the prepared statement
+        if (mysqli_stmt_execute($stmt)) {
+            // Store result to check if email exists
+            mysqli_stmt_store_result($stmt);
+            if (mysqli_stmt_num_rows($stmt) > 0) {
+                $email_err = "This email is already registered.";
+            }
+        } else {
+            echo "Something went wrong. Please try again later.";
+        }
+        // Close the statement
+        mysqli_stmt_close($stmt);
+    }
+    
+    // Proceed to the next page only if there are no errors
+    if (empty($email_err)) {
+        // If no email error, redirect to the success page
+        header("Location: success_createMembership.php");
+        exit(); // Terminate the script to prevent further execution
+    }
+}
+
 ?>
 <head>
     <meta charset="UTF-8">
