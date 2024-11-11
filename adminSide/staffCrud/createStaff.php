@@ -60,7 +60,6 @@ $next_account_id = getNextAvailableAccountID($link);
        /* Style the select input */
         #account_id {
             width: 100%;
-           
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 16px;
@@ -112,12 +111,17 @@ $next_account_id = getNextAvailableAccountID($link);
             <span class="invalid-feedback"></span>
         </div>
 
-        <div class="form-group">
+        <div class="form-group mb-3">
             <label for="role">Role:</label>
-            <input type="text" name="role" id="role" placeholder="Waiter" required class="form-control <?php echo (!empty($role_err)) ? 'is-invalid' : ''; ?>"><br>
-            <span class="invalid-feedback"></span>
+            <select name="role" id="role" required class="form-control <?php echo (!empty($role_err)) ? 'is-invalid' : ''; ?>">
+                <option value="" disabled selected>Select Role</option>
+                <option value="Waiter" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Waiter') ? 'selected' : ''; ?>>Waiter</option>
+                <option value="Chef" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Chef') ? 'selected' : ''; ?>>Chef</option>
+                <option value="Manager" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Manager') ? 'selected' : ''; ?>>Manager</option>
+            </select>
+            <span class="invalid-feedback"><?php echo $role_err; ?></span>
         </div>
-        
+
         <div class="form-group">
             <label for="account_id" class="form-label">Account ID:</label>
             <input min="1" type="number" name="account_id" placeholder="99" class="form-control <?php echo !$account_idErr ?: 'is-invalid'; ?>" id="account_id" required value="<?php echo $next_account_id; ?>" readonly><br>
@@ -125,13 +129,17 @@ $next_account_id = getNextAvailableAccountID($link);
                 Please provide a valid account_id.
             </div>
         </div>
-        
+
         <div class="form-group">
-            <label for="email" class="form-label">Email :</label>
-            <input type="text" name="email" placeholder="johnny12@dining.bar.com" class="form-control <?php echo !$emailErr ?: 'is-invalid'; ?>" id="email" required value="<?php echo $email; ?>"><br>
+            <label for="email" class="form-label">Email:</label>
+            <input type="email" name="email" placeholder="johnny12@dining.bar.com" 
+                class="form-control <?php echo !empty($email_err) ? 'is-invalid' : ''; ?>" 
+                id="email" required value="<?php echo htmlspecialchars($email); ?>" 
+                onblur="checkEmailAvailability()"><br>
             <div id="validationServerFeedback" class="invalid-feedback">
-                Please provide a valid email.
+                <?php echo $email_err; ?> <!-- Display error message if email already exists -->
             </div>
+            <small id="emailStatus"></small> <!-- Placeholder for AJAX feedback -->
         </div>
 
         <div class="form-group">
@@ -144,25 +152,66 @@ $next_account_id = getNextAvailableAccountID($link);
 
         <div class="form-group">
             <label for="phone_number" class="form-label">Phone Number:</label>
-            <input type="text" name="phone_number" placeholder="+60101231234" class="form-control <?php echo !$phone_numberErr ?: 'is-invalid'; ?>" id="phone_number" required value="<?php echo $phone_number; ?>"><br>
+            <input type="text" name="phone_number" placeholder="+60101231234" 
+                class="form-control <?php echo !empty($phone_numberErr) ? 'is-invalid' : ''; ?>" 
+                id="phone_number" required value="<?php echo $phone_number; ?>" 
+                pattern="^\+60[0-9]{9,10}$"
+                id="phone_number" required value="<?php echo $phone_number; ?>"><br>
             <div id="validationServerFeedback" class="invalid-feedback">
-                Please provide a valid phone number.
+                <?php echo $phone_numberErr ?: 'Please provide a valid phone number.'; ?>
             </div>
         </div>
 
         <div class="form-group">
             <label for="password">Password :</label>
-            <input type="password" name="password" placeholder="johnny1234@" id="password" required class="form-control <?php echo !$password_err ?: 'is-invalid' ; ?>" value="<?php echo $password; ?>"><br>
+            <input type="password" name="password" placeholder="Enter a strong password" id="password" 
+                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}" 
+                title="Password must be at least 8 characters long, contain at least one number, one uppercase letter, one lowercase letter, and one special character." 
+                required 
+                class="form-control <?php echo !$password_err ?: 'is-invalid' ; ?>" 
+                value="<?php echo $password; ?>"><br>
             <div id="validationServerFeedback" class="invalid-feedback">
                 Please provide a valid password.
             </div>
         </div>
-        
+
         <div class="form-group mb-5">
-            <input type="submit" class="btn btn-dark" value="Create Staff">
+            <input type="submit" name="submit" class="btn btn-dark" value="Create Staff" id="submitBtn" disabled> <!-- Disable initially -->
         </div>
 
     </form>
 </div>
+
+<script>
+    function checkEmailAvailability() {
+        var email = document.getElementById("email").value;
+
+        // Create an XMLHttpRequest object
+        var xhr = new XMLHttpRequest();
+
+        // Define the request to the server-side script
+        xhr.open("POST", "checkEmail.php", true);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+        // What to do when the response returns
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                // Get the response text (which is what the PHP will echo)
+                var responseText = xhr.responseText;
+                document.getElementById("emailStatus").innerHTML = responseText;
+
+                // If email is available, enable the submit button
+                if (responseText.trim() === "Email is available.") {
+                    document.getElementById("submitBtn").disabled = false;
+                } else {
+                    document.getElementById("submitBtn").disabled = true; // Keep disabled if email exists
+                }
+            }
+        };
+
+        // Send the request, passing the email value
+        xhr.send("email=" + encodeURIComponent(email));
+    }
+</script>
 
 <?php include '../inc/dashFooter.php'; ?>
