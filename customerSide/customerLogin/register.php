@@ -49,38 +49,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Validate password
-    if (empty(trim($_POST["password"]))) {
-        $password_err = "Please enter a password.";
-    } elseif (strlen(trim($_POST["password"])) < 6) {
-        $password_err = "Password must have at least 6 characters.";
-    } else {
-        $password = trim($_POST["password"]);
-    }
+    $PASSWORD = trim($_POST["password"]);
+    $uppercase = preg_match('@[A-Z]@', $PASSWORD);
+    $lowercase = preg_match('@[a-z]@', $PASSWORD);
+    $number = preg_match('@[0-9]@', $PASSWORD);
+    $specialChars = preg_match('@[^\w]@', $PASSWORD);
 
-    if (empty(trim($_POST["password"]))) {
+    if (empty($PASSWORD)) {
         $password_err = "Please enter a password.";
-    } elseif (strlen(trim($_POST["password"])) < 8) {
-        $password_err = "Password must have at least 8 characters.";
-    } elseif (!preg_match('/[A-Z]/', trim($_POST["password"]))) {
-        $password_err = "Password must contain at least one uppercase letter.";
-    } elseif (!preg_match('/[a-z]/', trim($_POST["password"]))) {
-        $password_err = "Password must contain at least one lowercase letter.";
-    } elseif (!preg_match('/[0-9]/', trim($_POST["password"]))) {
-        $password_err = "Password must contain at least one number.";
-    } elseif (!preg_match('/[\W]/', trim($_POST["password"]))) {
-        $password_err = "Password must contain at least one special character.";
+    } elseif (!$uppercase || !$lowercase || !$number || !$specialChars || strlen($PASSWORD) < 8) {
+        $password_err = "Password must be at least 8 characters long, 
+        include at least one uppercase letter, one lowercase letter, one number, and one special character.";
     } else {
         // Hash the password using bcrypt
-        $password = password_hash(trim($_POST["password"]), PASSWORD_BCRYPT);
+        $password = password_hash($PASSWORD, PASSWORD_BCRYPT);
     }
 
-    // Validate phone number
-    if (empty(trim($_POST["phone_number"]))) {
-        $phone_number_err = "Please enter your phone number.";
-    } else if(!is_numeric(trim($_POST['phone_number']))){
-        $phone_number_err = "Only enter numeric values!";
-    } else {
-        $phone_number = trim($_POST["phone_number"]);
+       // Validate phone number
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if (empty(trim($_POST["phone_number"]))) {
+            $phone_number_err = "Please enter your phone number.";
+        } elseif (!preg_match("/^\+60[0-9]{9,10}$/", trim($_POST["phone_number"]))) {
+            // Use regex to ensure that the phone number matches the pattern "+60" followed by 9-10 digits
+            $phone_number_err = "Please enter a valid phone number (e.g. +60101231234).";
+        } else {
+            $phone_number = trim($_POST["phone_number"]);
+        }
     }
 
     // Check input errors before inserting into the database
@@ -89,65 +83,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_begin_transaction($link);
 
         // Prepare an insert statement for Accounts table
-      // Prepare an insert statement for Accounts table
-$sql_accounts = "INSERT INTO Accounts (email, password, phone_number, register_date) VALUES (?, ?, ?, NOW())";
-if ($stmt_accounts = mysqli_prepare($link, $sql_accounts)) {
-    // Bind variables to the prepared statement as parameters
-    mysqli_stmt_bind_param($stmt_accounts, "sss", $param_email, $param_password, $param_phone_number);
+        $sql_accounts = "INSERT INTO Accounts (email, password, phone_number, register_date) VALUES (?, ?, ?, NOW())";
 
-    // Set parameters
-    $param_email = $email;
-    // Store the password as plain text (not recommended for production)
-    $param_password = $password;
-    $param_phone_number = $phone_number;
+        if ($stmt_accounts = mysqli_prepare($link, $sql_accounts)) {
+            // Bind variables to the prepared statement as parameters
+            mysqli_stmt_bind_param($stmt_accounts, "sss", $param_email, $param_password, $param_phone_number);
 
-    // ...
-}
+            // Set parameters
+            $param_email = $email;
+            // Store the password as plain text (not recommended for production)
+            $param_password = $password;
+            $param_phone_number = $phone_number;
 
-            // Attempt to execute the prepared statement for Accounts table
-            if (mysqli_stmt_execute($stmt_accounts)) {
-                // Get the last inserted account_id
-                $last_account_id = mysqli_insert_id($link);
-
-                // Prepare an insert statement for Memberships table
-                $sql_memberships = "INSERT INTO Memberships (member_name, points, account_id) VALUES (?, ?, ?)";
-                if ($stmt_memberships = mysqli_prepare($link, $sql_memberships)) {
-                    // Bind variables to the prepared statement as parameters
-                    mysqli_stmt_bind_param($stmt_memberships, "sii", $param_member_name, $param_points, $last_account_id);
-
-                    // Set parameters for Memberships table
-                    $param_member_name = $member_name;
-                    $param_points = 0; // You can set an initial value for points
-
-                    // Attempt to execute the prepared statement for Memberships table
-                    if (mysqli_stmt_execute($stmt_memberships)) {
-                        // Commit the transaction
-                        mysqli_commit($link);
-
-                        // Registration successful, redirect to the login page
-                        header("location: register_process.php");
-                        exit;
-                    } else {
-                        // Rollback the transaction if there was an error
-                        mysqli_rollback($link);
-                        echo "Oops! Something went wrong. Please try again later.";
-                    }
-
-                    // Close the statement for Memberships table
-                    mysqli_stmt_close($stmt_memberships);
-                }
-            } else {
-                // Rollback the transaction if there was an error
-                mysqli_rollback($link);
-                echo "Oops! Something went wrong. Please try again later.";
-            }
-
-            // Close the statement for Accounts table
-            mysqli_stmt_close($stmt_accounts);
+            // ...
         }
+
+        // Attempt to execute the prepared statement for Accounts table
+        if (mysqli_stmt_execute($stmt_accounts)) {
+            // Get the last inserted account_id
+            $last_account_id = mysqli_insert_id($link);
+
+            // Prepare an insert statement for Memberships table
+            $sql_memberships = "INSERT INTO Memberships (member_name, points, account_id) VALUES (?, ?, ?)";
+            if ($stmt_memberships = mysqli_prepare($link, $sql_memberships)) {
+                // Bind variables to the prepared statement as parameters
+                mysqli_stmt_bind_param($stmt_memberships, "sii", $param_member_name, $param_points, $last_account_id);
+
+                // Set parameters for Memberships table
+                $param_member_name = $member_name;
+                $param_points = 0; // You can set an initial value for points
+
+                // Attempt to execute the prepared statement for Memberships table
+                if (mysqli_stmt_execute($stmt_memberships)) {
+                    // Commit the transaction
+                    mysqli_commit($link);
+
+                    // Registration successful, redirect to the login page
+                    header("location: register_process.php");
+                    exit;
+                } else {
+                    // Rollback the transaction if there was an error
+                    mysqli_rollback($link);
+                    echo "Oops! Something went wrong. Please try again later.";
+                }
+
+                // Close the statement for Memberships table
+                mysqli_stmt_close($stmt_memberships);
+            }
+        } else {
+            // Rollback the transaction if there was an error
+            mysqli_rollback($link);
+            echo "Oops! Something went wrong. Please try again later.";
+        }
+
+        // Close the statement for Accounts table
+        mysqli_stmt_close($stmt_accounts);
     }
-
-
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -227,54 +219,55 @@ if ($stmt_accounts = mysqli_prepare($link, $sql_accounts)) {
 </head>
 <body>
     <div class="register-container">
-    <div class="register_wrapper"> <!-- Updated class name -->
-        <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a><br>
-       
-        <form action="register.php" method="post">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="text" name="email" class="form-control" placeholder="Enter Email">
-                                <span class="text-danger"><?php echo $email_err; ?></span>
-            </div>
-
-            <div class="form-group">
-                <label>Member Name</label>
-                <input type="text" name="member_name" class="form-control" placeholder="Enter Member Name">
-                                <span class="text-danger"><?php echo $member_name_err; ?></span>
-            </div>
-
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control" placeholder="Enter Password">
-                                <span class="text-danger"><?php echo $password_err; ?></span>
-            </div>
-
-            <div class="form-group">
-                <label for="phone_number" class="form-label">Phone Number:</label>
-                <input type="text" name="phone_number" placeholder="+60101231234" 
-                    class="form-control <?php echo !empty($phone_numberErr) ? 'is-invalid' : ''; ?>" 
-                    id="phone_number" required value="<?php echo $phone_number; ?>" 
-                    pattern="^\+60[0-9]{9,10}$"
-                    id="phone_number" required value="<?php echo $phone_number; ?>"><br>
-                <div id="validationServerFeedback" class="invalid-feedback">
-                    <?php echo $phone_numberErr ?: 'Please provide a valid phone number.'; ?>
+        <div class="register_wrapper"> 
+            <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a><br>
+        
+            <form action="register.php" method="post">
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" name="email" class="form-control" placeholder="Enter Email"
+                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+                    <span class="text-danger"><?php echo $email_err; ?></span>
                 </div>
-            </div>
 
-            <div class="form-group form-check">
-                <input type="checkbox" class="form-check-input" name="data_privacy" id="data_privacy" required>
-                <label class="form-check-label" for="data_privacy">
-                    I agree to the <a href="privacy_policy.php" target="_blank">data privacy policy</a>.
-                </label>
-                <span class="text-danger"><?php echo $data_privacy_err; ?></span>
-            </div>
+                <!-- Member Name Field -->
+                <div class="form-group">
+                    <label>Member Name</label>
+                    <input type="text" name="member_name" class="form-control" placeholder="Enter Member Name"
+                        value="<?php echo isset($_POST['member_name']) ? htmlspecialchars($_POST['member_name']) : ''; ?>">
+                    <span class="text-danger"><?php echo $member_name_err; ?></span>
+                </div>
 
-            <button style="background-color:black;" class="btn btn-dark" type="submit" name="register" value="Register">Register</button>
-           
-        </form>
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="Enter Password">
+                    <span class="text-danger"><?php echo $password_err; ?></span>
+                </div>
 
-        <p style="margin-top:1em; color:white;">Already have an account? <a href="../customerLogin/login.php" >Proceed to Login</a></p>
-    </div>
+                <!-- Phone Number Field -->
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone_number" class="form-control" placeholder="Enter Phone Number"
+                        value="<?php echo isset($_POST['phone_number']) ? htmlspecialchars($_POST['phone_number']) : ''; ?>">
+                    <span class="text-danger"><?php echo $phone_number_err; ?></span>
+                </div>
+
+                <!-- Data Privacy Checkbox -->
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="data_privacy" name="data_privacy">
+                    <label class="form-check-label" for="data_privacy">I agree to the <a href="../privacyPolicy.html" target="_blank">Data Privacy Policy</a></label>
+                    <span class="text-danger"><?php echo $data_privacy_err; ?></span>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary btn-block" value="Create Account">
+                </div>
+                <p>Already have an account? <a href="login.php">Login here</a></p>
+            </form>
+        </div>
     </div>
 </body>
 </html>
