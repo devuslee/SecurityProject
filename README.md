@@ -15,6 +15,16 @@
     * View charts and graph
 
 **Security Features Implemented for 6005CEM:**
+ - Input Validation and Password Hashing
+ - Error Handling
+ - Data Privacy Policy
+ - Session Management for Staff Module
+ - Role-Based Access Control
+ - Secure Communication (SSL Certification)
+ - SQL Injection
+ - Cross-Site Scripting (XSS) Protection
+ - Logging
+ - CSRF 
 
 
 **Steps to run the project locally for Netbeans Manually:**
