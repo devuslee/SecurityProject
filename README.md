@@ -1,5 +1,5 @@
 ## Restaurant POS and Website
-** System Features:**
+**System Features:**
 * **Customer Side (customerSide Folder):** Stores the website and allows customers to:
     * Make reservations
     * Register for accounts
@@ -14,7 +14,7 @@
     * Download reports
     * View charts and graph
 
-** Security Features Implemented for 6005CEM: **
+**Security Features Implemented for 6005CEM:**
 
 
 **Steps to run the project locally for Netbeans Manually:**
