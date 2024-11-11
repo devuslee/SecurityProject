@@ -3,8 +3,9 @@ require_once '../config.php';
 
 // Start the session
 session_start();
+// Set the timezone to Malaysia Time (Asia/Kuala_Lumpur)
+date_default_timezone_set('Asia/Kuala_Lumpur');
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,9 +13,7 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-
-    <title>Customer Reservation </title>
+    <title>Customer Reservation</title>
     <style>
         /* Apply background image to the body */
         body {
@@ -34,10 +33,7 @@ session_start();
             text-align: left;
             width: 36.4em;
             flex-basis: 50%; /* Adjust the width of the columns as needed */
-           
         }
-
-            
     </style>
 </head>
 <body>
@@ -47,11 +43,10 @@ session_start();
         if ($reservationStatus === 'success') {
             $message = "Reservation successful";
             $reservation_id = $_GET['reservation_id'] ?? null;
-            echo '<a class="nav-link" href="../home/home.php#hero">' .
-            '<h1 class="text-center" style="font-family: Copperplate; color: whitesmoke;">JOHNNY\'S</h1>' .
+            echo '<a class="nav-link" href="../home/home.php#hero">' . 
+            '<h1 class="text-center" style="font-family: Copperplate; color: whitesmoke;">JOHNNY\'S</h1>' . 
             '<span class="sr-only"></span></a>';
             echo '<script>alert("Table Successfully Reserved. Click OK to view your reservation receipt."); window.location.href = "reservationReceipt.php?reservation_id=' . $reservation_id . '";</script>';
-
         }
         $head_count = $_GET['head_count'] ?? 1;
     ?>
@@ -66,37 +61,37 @@ session_start();
             <div class="column">
                 <div id="Search Table">
                     <h2 style=" color:white;">Search for Time</h2>
-                 
+
                     <form id="reservation-form" method="GET" action="availability.php"><br>
                         <div class="form-group">
-                        <label for="reservation_date" style="">Select Date</label><br>
-                        <input class="form-control" type="date" id="reservation_date" name="reservation_date" required>
+                            <label for="reservation_date" style="">Select Date</label><br>
+                            <input class="form-control" type="date" id="reservation_date" name="reservation_date" required>
                         </div>
                         <div class="form-group">
-                        <label for="reservation_time" style="">Available Reservation Times</label>
-                        <div id="availability-table">
-                            <?php
-                            $availableTimes = array();
-                            for ($hour = 10; $hour <= 20; $hour++) {
-                                for ($minute = 0; $minute < 60; $minute += 60) {
-                                    $time = sprintf('%02d:%02d:00', $hour, $minute);
-                                    $availableTimes[] = $time;
+                            <label for="reservation_time" style="">Available Reservation Times</label>
+                            <div id="availability-table">
+                                <?php
+                                $availableTimes = array();
+                                for ($hour = 10; $hour <= 20; $hour++) {
+                                    for ($minute = 0; $minute < 60; $minute += 60) {
+                                        $time = sprintf('%02d:%02d:00', $hour, $minute);
+                                        $availableTimes[] = $time;
+                                    }
                                 }
-                            }
-                            echo '<select name="reservation_time" id="reservation_time" style="width:10em;" class="form-control" >';
-                            echo '<option value="" selected disabled>Select a Time</option>';
-                            foreach ($availableTimes as $time) {
-                                echo "<option  value='$time'>$time</option>";
-                            }
-                            echo '</select>';
-                            if (isset($_GET['message'])) {
-                                $message = $_GET['message'];
-                                echo "<p>$message</p>";
-                            }
-                            ?>
+                                echo '<select name="reservation_time" id="reservation_time" style="width:10em;" class="form-control" >';
+                                echo '<option value="" selected disabled>Select a Time</option>';
+                                foreach ($availableTimes as $time) {
+                                    echo "<option  value='$time'>$time</option>";
+                                }
+                                echo '</select>';
+                                if (isset($_GET['message'])) {
+                                    $message = $_GET['message'];
+                                    echo "<p>$message</p>";
+                                }
+                                ?>
+                            </div>
                         </div>
-                        </div>
-              
+
                         <input type="number" id="head_count" name="head_count" value=1 hidden required>
                         <button type="submit" style="background-color: black; color: rgb(234, 234, 234); " class="btn" name="submit" >Search</button>
                     </form>
@@ -116,7 +111,7 @@ session_start();
                         $defaultReservationDate = $_GET['reservation_date'] ?? date("Y-m-d");
                         $defaultReservationTime = $_GET['reservation_time'] ?? "13:00:00";
                         ?>
-                   
+
                         <div class="form-group " >
                             <label for="reservation_date" style="">Reservation Date</label><br>
                             <input type="date" id="reservation_date" name="reservation_date"
@@ -124,7 +119,7 @@ session_start();
                             <input type="time" id="reservation_time" name="reservation_time"
                                    value="<?= $defaultReservationTime ?>" readonly required>
                         </div>
-                 
+
                         <div class="form-group">
                             <label for="table_id_reserve" style="">Available Tables</label>
                             <select class="form-control" name="table_id" id="table_id_reserve" style="width:10em;" required>
@@ -152,7 +147,7 @@ session_start();
                             </select>
                             <input type="number" id="head_count" name="head_count" value="<?= $head_count ?>" required hidden>
                         </div>
-                 
+
                         <div class="form-group mb-3">
                             <label for="special_request">Special request</label><br>
                             <textarea class="form-control"  id="special_request" name="special_request"> </textarea><br>
@@ -164,14 +159,20 @@ session_start();
         </div>
     </div>
 
+    <!-- Add JavaScript to restrict past dates -->
     <script>
-        const viewDateInput = document.getElementById("reservation_date");
-        const makeDateInput = document.getElementById("reservation_date");
+        // Set the minimum date to today's date in Malaysia Time
+        const today = new Date().toLocaleDateString('en-CA'); // Localize to 'YYYY-MM-DD'
+        document.getElementById('reservation_date').setAttribute('min', today);
 
-        viewDateInput.addEventListener("change", function () {
-            makeDateInput.value = this.value;
+        // Additional validation before form submission (optional)
+        document.getElementById('reservation-form').addEventListener('submit', function(event) {
+            const reservationDate = document.getElementById('reservation_date').value;
+            if (new Date(reservationDate) < new Date()) {
+                event.preventDefault(); // Prevent form submission
+                alert("Reservation date cannot be in the past.");
+            }
         });
     </script>
 </body>
-
 </html>
