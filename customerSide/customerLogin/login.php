@@ -45,33 +45,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Fetch the result row
                     $row = mysqli_fetch_assoc($result);
 
-                    // Verify the password
-                    if (password_verify($password, $row["password"])) {
-                        $_SESSION["loggedin"] = true;
-                        $_SESSION["email"] = $email;
+                    // Check if the account is verified
+                    if ($row["is_verified"] == 0) {
+                        $email_err = "Your account has not been verified. Please check your email to verify your account.";
+                    } else {
+                        // Verify the password
+                        if (password_verify($password, $row["password"])) {
+                            $_SESSION["loggedin"] = true;
+                            $_SESSION["email"] = $email;
 
-                        // Query to get membership details
-                        $sql_member = "SELECT * FROM Memberships WHERE account_id = " . $row['account_id'];
-                        $result_member = mysqli_query($link, $sql_member);
+                            // Query to get membership details
+                            $sql_member = "SELECT * FROM Memberships WHERE account_id = " . $row['account_id'];
+                            $result_member = mysqli_query($link, $sql_member);
 
-                        if ($result_member) {
-                            $membership_row = mysqli_fetch_assoc($result_member);
+                            if ($result_member) {
+                                $membership_row = mysqli_fetch_assoc($result_member);
 
-                            if ($membership_row) {
-                                $_SESSION["account_id"] = $membership_row["account_id"];
-                                header("location: ../home/home.php"); // Redirect to the home page
-                                exit;
+                                if ($membership_row) {
+                                    $_SESSION["account_id"] = $membership_row["account_id"];
+                                    header("location: ../home/home.php"); // Redirect to the home page
+                                    exit;
+                                } else {
+                                    // No membership details found
+                                    $password_err = "No membership details found for this account.";
+                                }
                             } else {
-                                // No membership details found
-                                $password_err = "No membership details found for this account.";
+                                // Error in membership query
+                                $password_err = "Error fetching membership details: " . mysqli_error($link);
                             }
                         } else {
-                            // Error in membership query
-                            $password_err = "Error fetching membership details: " . mysqli_error($link);
+                            // Password is incorrect
+                            $password_err = "Invalid password. Please try again.";
                         }
-                    } else {
-                        // Password is incorrect
-                        $password_err = "Invalid password. Please try again.";
                     }
                 } else {
                     // No matching records found

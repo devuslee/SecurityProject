@@ -1,6 +1,10 @@
 <?php
 // Include your database connection code here (not shown in this example).
 require_once '../config.php';
+require '../../vendor/autoload.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 session_start();
 
 // Define variables and initialize them to empty values
@@ -77,70 +81,77 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Generate a verification token
+    $verification_token = bin2hex(random_bytes(4)); // Generates an 8-character token
+
     // Check input errors before inserting into the database
     if (empty($email_err) && empty($member_name_err) && empty($password_err) && empty($phone_number_err) && empty($data_privacy_err)) {
         // Start a transaction
         mysqli_begin_transaction($link);
 
-        // Prepare an insert statement for Accounts table
-        $sql_accounts = "INSERT INTO Accounts (email, password, phone_number, register_date) VALUES (?, ?, ?, NOW())";
+        // Prepare an insert statement for Accounts table with verification token
+        $sql_accounts = "INSERT INTO Accounts (email, password, phone_number, register_date, verification_token, is_verified) VALUES (?, ?, ?, NOW(), ?, 0)";
 
         if ($stmt_accounts = mysqli_prepare($link, $sql_accounts)) {
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt_accounts, "sss", $param_email, $param_password, $param_phone_number);
+            mysqli_stmt_bind_param($stmt_accounts, "ssss", $param_email, $param_password, $param_phone_number, $verification_token);
 
             // Set parameters
             $param_email = $email;
-            // Store the password as plain text (not recommended for production)
             $param_password = $password;
             $param_phone_number = $phone_number;
 
-            // ...
-        }
+            // Attempt to execute the prepared statement for Accounts table
+            if (mysqli_stmt_execute($stmt_accounts)) {
+                $last_account_id = mysqli_insert_id($link);
 
-        // Attempt to execute the prepared statement for Accounts table
-        if (mysqli_stmt_execute($stmt_accounts)) {
-            // Get the last inserted account_id
-            $last_account_id = mysqli_insert_id($link);
+                $sql_memberships = "INSERT INTO Memberships (member_name, points, account_id) VALUES (?, ?, ?)";
+                if ($stmt_memberships = mysqli_prepare($link, $sql_memberships)) {
+                    mysqli_stmt_bind_param($stmt_memberships, "sii", $param_member_name, $param_points, $last_account_id);
 
-            // Prepare an insert statement for Memberships table
-            $sql_memberships = "INSERT INTO Memberships (member_name, points, account_id) VALUES (?, ?, ?)";
-            if ($stmt_memberships = mysqli_prepare($link, $sql_memberships)) {
-                // Bind variables to the prepared statement as parameters
-                mysqli_stmt_bind_param($stmt_memberships, "sii", $param_member_name, $param_points, $last_account_id);
+                    $param_member_name = $member_name;
+                    $param_points = 0;
 
-                // Set parameters for Memberships table
-                $param_member_name = $member_name;
-                $param_points = 0; // You can set an initial value for points
+                    if (mysqli_stmt_execute($stmt_memberships)) {
+                        mysqli_commit($link);
 
-                // Attempt to execute the prepared statement for Memberships table
-                if (mysqli_stmt_execute($stmt_memberships)) {
-                    // Commit the transaction
-                    mysqli_commit($link);
+                        $phpmailer = new PHPMailer();
+                        $phpmailer->isSMTP();
+                        $phpmailer->Host = 'sandbox.smtp.mailtrap.io';
+                        $phpmailer->SMTPAuth = true;
+                        $phpmailer->Port = 2525;
+                        $phpmailer->Username = '89be80e74f9b17';
+                        $phpmailer->Password = '7b93a7e872a9cd';
 
-                    // Registration successful, redirect to the login page
-                    header("location: register_process.php");
-                    exit;
-                } else {
-                    // Rollback the transaction if there was an error
-                    mysqli_rollback($link);
-                    echo "Oops! Something went wrong. Please try again later.";
+                        $phpmailer->setFrom('restaurant@yourdomain.com', 'JohhnyRestaurant');
+                        $phpmailer->addAddress($email);
+                        $phpmailer->isHTML(true);
+                        $phpmailer->Subject = 'Email Verification';
+                        $phpmailer->Body = "Your verification code is: <b>$verification_token</b>";
+
+                        if ($phpmailer->send()) {
+                            $_SESSION['email'] = $email;
+                            header("Location: verify.php"); 
+                            exit();
+                        } else {
+                            echo "Verification email could not be sent. Mailer Error: " . $phpmailer->ErrorInfo;
+                        }
+                    } else {
+                        mysqli_rollback($link);
+                        echo "Oops! Something went wrong. Please try again later.";
+                    }
+                    mysqli_stmt_close($stmt_memberships);
                 }
-
-                // Close the statement for Memberships table
-                mysqli_stmt_close($stmt_memberships);
+            } else {
+                mysqli_rollback($link);
+                echo "Oops! Something went wrong. Please try again later.";
             }
-        } else {
-            // Rollback the transaction if there was an error
-            mysqli_rollback($link);
-            echo "Oops! Something went wrong. Please try again later.";
+            mysqli_stmt_close($stmt_accounts);
         }
-
-        // Close the statement for Accounts table
-        mysqli_stmt_close($stmt_accounts);
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,7 +159,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Registration Form</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
@@ -156,53 +166,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0; /* Remove default margin */
+            margin: 0; 
             background-color:black;
-             background-image: url('../image/loginBackground.jpg'); /* Set the background image path */
+            background-image: url('../image/loginBackground.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             color: white;
-            }
-
-
-        
-/* Style for the container within login.php */
-.register-container {
-  padding: 50px; /* Adjust the padding as needed */
-  border-radius: 10px; /* Add rounded corners */
-  margin: 100px auto; /* Center the container horizontally */
-  max-width: 500px; /* Set a maximum width for the container */
-}
+        }
+        .register-container {
+          padding: 50px;
+          border-radius: 10px;
+          margin: 100px auto;
+          max-width: 500px;
+        }
         .register_wrapper {
-            width: 400px; /* Increase the container width */
+            width: 400px;
             padding: 20px;
         }
-
         h2 {
             text-align: center;
             font-family: 'Montserrat', serif;
         }
-
         p {
             font-family: 'Montserrat', serif;
         }
-
         .form-group {
-            margin-bottom: 15px; /* Add space between form elements */
+            margin-bottom: 15px;
         }
-
         ::placeholder {
-            font-size: 12px; /* Adjust the font size as needed */
+            font-size: 12px;
         }
-
-        /* Add flip animation class to all Font Awesome icons */
         .fa-flip {
             animation: fa-flip 3s infinite;
         }
-
-        /* Keyframes for the flip animation */
         @keyframes fa-flip {
             0% {
                 transform: scale(1) rotateY(0);
@@ -214,60 +212,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 transform: scale(1) rotateY(360deg);
             }
         }
-        
     </style>
 </head>
 <body>
     <div class="register-container">
-    <div class="register_wrapper"> 
-        <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a><br>
-       
-        <form action="register.php" method="post">
-            <!-- Email Field -->
-            <div class="form-group">
-                <label>Email</label>
-                <input type="text" name="email" class="form-control" placeholder="Enter Email"
-                       value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
-                <span class="text-danger"><?php echo $email_err; ?></span>
-            </div>
-
-            <!-- Member Name Field -->
-            <div class="form-group">
-                <label>Member Name</label>
-                <input type="text" name="member_name" class="form-control" placeholder="Enter Member Name"
-                       value="<?php echo isset($_POST['member_name']) ? htmlspecialchars($_POST['member_name']) : ''; ?>">
-                <span class="text-danger"><?php echo $member_name_err; ?></span>
-            </div>
-
-            <!-- Password Field -->
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control" placeholder="Enter Password">
-                <span class="text-danger"><?php echo $password_err; ?></span>
-            </div>
-
-            <!-- Phone Number Field -->
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" name="phone_number" class="form-control" placeholder="Enter Phone Number"
-                       value="<?php echo isset($_POST['phone_number']) ? htmlspecialchars($_POST['phone_number']) : ''; ?>">
-                <span class="text-danger"><?php echo $phone_number_err; ?></span>
-            </div>
-
-            <!-- Data Privacy Checkbox -->
-            <div class="form-group form-check">
-                <input type="checkbox" class="form-check-input" id="data_privacy" name="data_privacy">
-                <label class="form-check-label" for="data_privacy">I agree to the <a href="../privacyPolicy.html" target="_blank">Data Privacy Policy</a></label>
-                <span class="text-danger"><?php echo $data_privacy_err; ?></span>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="form-group">
-                <input type="submit" class="btn btn-primary btn-block" value="Create Account">
-            </div>
-            <p>Already have an account? <a href="login.php">Login here</a></p>
-        </form>
-    </div>
+        <div class="register_wrapper"> 
+            <a class="nav-link" href="../home/home.php#hero"> 
+                <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1>
+            </a><br>
+            <form action="register.php" method="post">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" name="email" class="form-control" placeholder="Enter Email"
+                           value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+                    <span class="text-danger"><?php echo $email_err; ?></span>
+                </div>
+                <div class="form-group">
+                    <label>Member Name</label>
+                    <input type="text" name="member_name" class="form-control" placeholder="Enter Member Name"
+                           value="<?php echo isset($_POST['member_name']) ? htmlspecialchars($_POST['member_name']) : ''; ?>">
+                    <span class="text-danger"><?php echo $member_name_err; ?></span>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="Enter Password">
+                    <span class="text-danger"><?php echo $password_err; ?></span>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone_number" class="form-control" placeholder="Enter Phone Number"
+                           value="<?php echo isset($_POST['phone_number']) ? htmlspecialchars($_POST['phone_number']) : ''; ?>">
+                    <span class="text-danger"><?php echo $phone_number_err; ?></span>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="data_privacy" name="data_privacy">
+                    <label class="form-check-label" for="data_privacy">I agree to the <a href="../privacyPolicy.html" target="_blank">Data Privacy Policy</a></label>
+                    <span class="text-danger"><?php echo $data_privacy_err; ?></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary btn-block" value="Create Account">
+                </div>
+                <p>Already have an account? <a href="login.php">Login here</a></p>
+            </form>
+        </div>
     </div>
 </body>
 </html>
