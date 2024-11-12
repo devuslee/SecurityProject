@@ -1,7 +1,20 @@
 <?php
-// Initialize the session
+// Include the database connection and logging function
 require_once '../config.php';
 session_start();
+
+// Define the logging function
+function logUserAction($user_id, $action, $page_url) {
+    global $link;
+
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+
+    $stmt = $link->prepare("INSERT INTO user_logs (user_id, action, page_url, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("issss", $user_id, $action, $page_url, $ip_address, $user_agent);
+    $stmt->execute();
+    $stmt->close();
+}
 
 // Check if the user is already logged out
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
@@ -10,41 +23,21 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
+// Log the logout action before destroying the session
+$user_id = $_SESSION['account_id'] ?? null; // Adjust to your session variable for user ID
+logUserAction($user_id, 'Logout', 'logout.php');
+
 // Unset custom cookies (change cookie_name to the actual name of your custom cookie)
 setcookie('cookie_name', '', time() - 3600, '/');
 
-// Clear session data
+// Clear session data and destroy session
 $_SESSION = array();
 session_destroy();
 
 // Prevent caching
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
-?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-    
-    <!-- Custom CSS styles for the alert box -->
-    <style>
-        .alert-box {
-            max-width: 300px;
-            margin: 0 auto;
-        }
-
-        .alert-icon {
-            padding-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <?php
-    header("location: ../home/home.php"); // Redirect to the home page
-    exit;
-?>
-</body>
-</html>
+// Redirect to the home page
+header("Location: ../home/home.php");
+exit;

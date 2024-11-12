@@ -3,6 +3,19 @@
 require_once '../config.php';
 session_start();
 
+// Define the logging function
+function logUserAction($user_id, $action, $page_url) {
+    global $link;
+
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+
+    $stmt = $link->prepare("INSERT INTO user_logs (user_id, action, page_url, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("issss", $user_id, $action, $page_url, $ip_address, $user_agent);
+    $stmt->execute();
+    $stmt->close();
+}
+
 // Define variables for email and password
 $email = $password = "";
 $email_err = $password_err = "";
@@ -48,11 +61,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Check if the account is verified
                     if ($row["is_verified"] == 0) {
                         $email_err = "Your account has not been verified. Please check your email to verify your account.";
+                        logUserAction(null, 'Login failed - account not verified', 'login.php');
                     } else {
                         // Verify the password
                         if (password_verify($password, $row["password"])) {
                             $_SESSION["loggedin"] = true;
                             $_SESSION["email"] = $email;
+
+                            // Log successful login
+                            logUserAction($row['account_id'], 'Login successful', 'login.php');
 
                             // Query to get membership details
                             $sql_member = "SELECT * FROM Memberships WHERE account_id = " . $row['account_id'];
@@ -76,11 +93,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         } else {
                             // Password is incorrect
                             $password_err = "Invalid password. Please try again.";
+                            logUserAction($row['account_id'], 'Login failed - invalid password', 'login.php');
                         }
                     }
                 } else {
                     // No matching records found
                     $email_err = "No account found with this email.";
+                    logUserAction(null, 'Login failed - email not found', 'login.php');
                 }
             } else {
                 echo "Oops! Something went wrong. Please try again later.";
