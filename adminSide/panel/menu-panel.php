@@ -1,5 +1,32 @@
 <?php
 session_start(); // Ensure session is started
+
+$timeout_duration = 300; // 15 minutes
+
+// Check if the user is logged in
+if (isset($_SESSION['logged_account_id'])) {
+    // Check if the last activity time is set
+    if (isset($_SESSION['last_activity'])) {
+        // Calculate the session's lifetime
+        $session_life = time() - $_SESSION['last_activity'];
+        
+        // If the session has expired, destroy the session and redirect to login
+        if ($session_life > $timeout_duration) {
+            session_unset(); // Unset all session variables
+            session_destroy(); // Destroy the session
+            header("Location: ../sessionTimedOut.php");
+            exit;
+        }
+    }
+    // Update the last activity time
+    $_SESSION['last_activity'] = time(); // Update last activity time to current time
+} else {
+    // User is not logged in, redirect to login page
+    header("Location: login.php");
+    exit;
+}
+
+
 require_once '../posBackend/checkIfLoggedIn.php';
 ?>
 <?php include '../inc/dashHeader.php'; ?>
@@ -11,10 +38,12 @@ require_once '../posBackend/checkIfLoggedIn.php';
     <div class="container-fluid pt-5 pl-600">
         <div class="row">
             <div class="m-50">
+                <h2 class="pull-left">Items Details</h2>
+                <?php if ($_SESSION['role'] == 'Manager') : ?>
                 <div class="mt-5 mb-3">
-                    <h2 class="pull-left">Items Details</h2>
                     <a href="../menuCrud/createItem.php" class="btn btn-outline-dark"><i class="fa fa-plus"></i> Add Item</a>
                 </div>
+                <?php endif; ?>
                 <div class="mb-3">
                     <form method="POST" action="#">
                         <div class="row">
@@ -94,11 +123,17 @@ require_once '../posBackend/checkIfLoggedIn.php';
                             echo "<td>" . $row['item_description'] . "</td>";
                             echo "<td>";
                             // Modify link with the pencil icon
+                            if ($_SESSION['role'] != 'Manager') {
                              $update_sql = "UPDATE Menu SET item_name=?, item_type=?, item_category=?, item_price=?, item_description=? WHERE item_id=?";
                             echo '<a href="../menuCrud/updateItemVerify.php?id='. $row['item_id'] .'" title="Modify Record" data-toggle="tooltip"'
                                     . 'onclick="return confirm(\'Admin permission Required!\n\nAre you sure you want to Edit this Item?\')">'
                              . '<i class="fa fa-pencil" aria-hidden="true"></i></a>';
                             echo "</td>";
+                            } else {
+                                echo '<a href="../menuCrud/updateItem.php?id='. $row['item_id'] .'" title="Modify Record" data-toggle="tooltip">'
+                                    . '<i class="fa fa-pencil" aria-hidden="true"></i></a>';
+                                echo "</td>";
+                            }
 
                             /*echo "<td>";
                             $deleteSQL = "DELETE FROM items WHERE item_id = '" . $row['item_id'] . "';";

@@ -30,40 +30,40 @@ if(isset($_SESSION['logged_account_id'])) {
         h2{
             text-align: center;
         }
-        
-        
     </style>
 </head>
 <body>
     <p>&nbsp;&nbsp;&nbsp;</p> 
     <section id="signup">
     <div class="container my-6 ">
-    <a class="nav-link" href="../../customerSide/home/home.php"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a>
+        <a class="nav-link" href="../../customerSide/home/home.php"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a>
 
-    
-    <div class="wrapper">
-        <?php 
-        if(!empty($login_err)){
-            echo '<div class="alert alert-danger">' . $login_err . '</div>';
-        }        
-        ?>
+        <div class="wrapper">
+            <?php 
+            // Sanitize error message if exists
+            if (!empty($login_err)) {
+                echo '<div class="alert alert-danger">' . htmlspecialchars($login_err) . '</div>';
+            }        
+            ?>
 
-    <form action="login_process.php" method="post" >
-        <div class="form-group">
-            <label for="account_id">Staff Account ID</label>
-            <input type="number" id="account_id" name="account_id" placeholder="Enter Account ID" required class="form-control <?php echo (!empty($account_id)) ? 'is-invalid' : ''; ?>" value="<?php echo $account_id; ?>">
-            <span class="invalid-feedback"><?php echo $account_id; ?></span>
+            <form action="login_process.php" method="post">
+                <div class="form-group">
+                    <label for="account_id">Staff Account ID</label>
+                    <input type="number" id="account_id" name="account_id" placeholder="Enter Account ID" required class="form-control <?php echo (!empty($account_id)) ? 'is-invalid' : ''; ?>" value="<?php echo isset($account_id) ? htmlspecialchars($account_id) : ''; ?>">
+                    <span class="invalid-feedback"><?php echo isset($account_id) ? htmlspecialchars($account_id) : ''; ?></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter Password" required class="form-control <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>">
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-light" type="submit" name="submit" value="Login">Login</button>
+                </div>
+            </form>
         </div>
-        
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter Password" required class="form-control <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>">
-        </div>
-            
-            <div class="form-group">
-                <button class="btn btn-light" type="submit" name="submit" value="Login">Login</button>
-            </div>
-    </form>
     </div>
+    </section>
 </body>
 </html>

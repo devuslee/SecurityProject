@@ -16,6 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn = $link;
 
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
     // Start a transaction to ensure consistency across multiple table inserts
     $conn->begin_transaction();
 
@@ -128,9 +129,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             max-width: 300px;
             margin: 0 auto;
         }
+
         .alert-icon {
             padding-bottom: 20px;
         }
+    
     </style>
 </head>
 <body>
@@ -184,3 +187,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
 </body>
 </html>
+

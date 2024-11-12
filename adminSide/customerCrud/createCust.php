@@ -34,18 +34,22 @@ function getNextAvailableMemberID($conn) {
     return $next_member_id;
 }
 
+
+
+
 // Get the next available Member ID
 $next_member_id = getNextAvailableMemberID($link);
 
 // Get the next available account ID
 $next_account_id = getNextAvailableAccountID($link);
 
+
 // Check if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate email to ensure it's not already in the database
     $email = trim($_POST["email"]);
     $sql = "SELECT account_id FROM Accounts WHERE email = ?";
-
+    
     if ($stmt = mysqli_prepare($link, $sql)) {
         // Bind variables to the prepared statement as parameters
         mysqli_stmt_bind_param($stmt, "s", $param_email);
@@ -66,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Close the statement
         mysqli_stmt_close($stmt);
     }
-
+    
     // Proceed to the next page only if there are no errors
     if (empty($email_err)) {
         // If no email error, redirect to the success page
@@ -74,6 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit(); // Terminate the script to prevent further execution
     }
 }
+
 
 ?>
 <head>
@@ -120,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <p>Please fill in Membership Information</p>
 
     <form method="POST" action="success_createMembership.php" class="ht-600 w-50">
-
+        
         <div class="form-group">
             <label for="member_id" class="form-label">Member ID:</label>
             <input min="1" type="number" name="member_id" placeholder="1" class="form-control <?php echo $member_id_err ? 'is-invalid' : ''; ?>" id="member_id" required value="<?php echo $next_member_id; ?>" readonly><br>
@@ -128,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 Please provide a valid member_id.
             </div>
         </div>
-
+        
         <div class="form-group">
             <label for="member_name" class="form-label">Member Name :</label>
             <input type="text" name="member_name" placeholder="Johnny Hatsoff" class="form-control <?php echo $member_name_err ? 'is-invalid' : ''; ?>" id="member_name" required value="<?php echo $member_name; ?>"><br>
@@ -152,7 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 Please provide a valid account_id.
             </div>
         </div>
-
+        
         <div class="form-group">
             <label for="email" class="form-label">Email:</label>
             <input type="email" name="email" placeholder="johnny12@dining.bar.com" 
@@ -164,6 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <small id="emailStatus"></small> <!-- Placeholder for AJAX feedback -->
         </div>
+        
 
         <div class="form-group">
             <label for="register_date">Register Date :</label>
@@ -197,7 +203,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 Please provide a valid password.
             </div>
         </div>
-
+        
         <div class="form-group mb-5">
             <input type="submit" name="submit" class="btn btn-dark" value="Create Membership" id="submitBtn" disabled> <!-- Disable initially -->
         </div>

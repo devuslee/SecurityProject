@@ -2,6 +2,7 @@
 // reservation.php
 require_once '../config.php';
 session_start();
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get the values from the form
     $customer_name = $_POST["customer_name"];
@@ -9,6 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $reservation_time = $_POST["reservation_time"];
     $reservation_date = $_POST["reservation_date"];
     $special_request = $_POST["special_request"];
+
     // Backend validation: Check if reservation date is in the past
     $current_date = date("Y-m-d");
     if (new DateTime($reservation_date) < new DateTime($current_date)) {
@@ -16,6 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: reservePage.php?error=invalid_date");
         exit();
     }
+
     // Fetch table capacity
     $select_query_capacity = "SELECT capacity FROM restaurant_tables WHERE table_id='$table_id';";
     $results_capacity = mysqli_query($link, $select_query_capacity);

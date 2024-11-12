@@ -49,11 +49,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if (password_verify($password, $row["password"])) {
                         $_SESSION["loggedin"] = true;
                         $_SESSION["email"] = $email;
+
                         // Query to get membership details
                         $sql_member = "SELECT * FROM Memberships WHERE account_id = " . $row['account_id'];
                         $result_member = mysqli_query($link, $sql_member);
+
                         if ($result_member) {
                             $membership_row = mysqli_fetch_assoc($result_member);
+
                             if ($membership_row) {
                                 $_SESSION["account_id"] = $membership_row["account_id"];
                                 header("location: ../home/home.php"); // Redirect to the home page
@@ -137,6 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ::placeholder {
             font-size: 12px; /* Adjust the font size as needed */
         }
+
         .text-danger {
             font-size: 13px;
         }
@@ -144,30 +148,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="login-container">
-        <div class="login_wrapper">
-            <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a>
-            <div class="wrapper">
-                <form action="login.php" method="post">
-                    <!-- Email Field -->
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="Enter User Email" 
-                            value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
-                        <span class="text-danger"><?php echo $email_err; ?></span>
-                    </div>
-                    <!-- Password Field -->
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" name="password" class="form-control" placeholder="Enter User Password" required>
-                        <span class="text-danger"><?php echo $password_err; ?></span>
-                    </div>
-                    <!-- Login Button -->
-                    <button class="btn btn-dark" style="background-color:black;" type="submit" name="submit" value="Login">Login</button>
-                </form>
+    <div class="login_wrapper">
+        <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a>
 
-                <p style="margin-top:1em; color:white;">Don't have an account? <a href="register.php" style="">Proceed to Register</a></p>
-            </div>
+        <div class="wrapper">
+            <form action="login.php" method="post">
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="Enter User Email" 
+                           value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email'], ENT_QUOTES, 'UTF-8') : ''; ?>" required>
+                    <span class="text-danger"><?php echo isset($email_err) ? htmlspecialchars($email_err, ENT_QUOTES, 'UTF-8') : ''; ?></span>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="Enter User Password" required>
+                    <span class="text-danger"><?php echo isset($password_err) ? htmlspecialchars($password_err, ENT_QUOTES, 'UTF-8') : ''; ?></span>
+                </div>
+
+                <!-- Login Button -->
+                <button class="btn btn-dark" style="background-color:black;" type="submit" name="submit" value="Login">Login</button>
+            </form>
+
+            <p style="margin-top:1em; color:white;">Don't have an account? <a href="register.php" style="">Proceed to Register</a></p>
         </div>
+    </div>
     </div>
 </body>
 </html>

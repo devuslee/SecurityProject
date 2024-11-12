@@ -54,38 +54,46 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-person-shelter"></i></div>
                                 Members
                             </a>
-                            <a class="nav-link" href="../panel/staff-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-people-group"></i></div>
-                                Staff
-                            </a>
-                            <a class="nav-link" href="../panel/account-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-eye"></i></div>
-                                View All Accounts
-                            </a>
-                            <a class="nav-link" href="../panel/kitchen-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-kitchen-set"></i></div>
-                                Kitchen
-                            </a>
-                            <div class="sb-sidenav-menu-heading">Report & Analytics</div>
-                            <a class="nav-link" href="../panel/sales-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-fire"></i></div>
-                                Items Sales
-                            </a>
-                            <a class="nav-link" href="../panel/statistics-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                                Revenue Statistics
-                            </a>
-                            <a class="nav-link" href="../panel/profiles-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                Member Profiles
-                            </a>
+
+                            <?php if ($_SESSION['role'] == 'Chef') : ?>
+                                <a class="nav-link" href="../panel/kitchen-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-kitchen-set"></i></div>
+                                    Kitchen
+                                </a>
+                            <?php endif; ?>
+
+                            <?php if ($_SESSION['role'] == 'Manager') : ?>
+                                <a class="nav-link" href="../panel/staff-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-people-group"></i></div>
+                                    Staff
+                                </a>
+                                <a class="nav-link" href="../panel/account-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-eye"></i></div>
+                                    View All Accounts
+                                </a>
+                                <a class="nav-link" href="../panel/kitchen-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-kitchen-set"></i></div>
+                                    Kitchen
+                                </a>
+                                <div class="sb-sidenav-menu-heading">Report & Analytics</div>
+                                <a class="nav-link" href="../panel/sales-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-fire"></i></div>
+                                    Items Sales
+                                </a>
+                                <a class="nav-link" href="../panel/statistics-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
+                                    Revenue Statistics
+                                </a>
+                                <a class="nav-link" href="../panel/profiles-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+                                    Member Profiles
+                                </a>
+                            <?php endif; ?>
                             <a class="nav-link" href="../StaffLogin/logout.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
                                 Log out
                             </a>
-                            
-                            
-                            
+                        
                         </div>
                     </div>
                         <div class="sb-sidenav-footer">
@@ -95,7 +103,8 @@
                                 if (isset($_SESSION['logged_account_id']) && isset($_SESSION['logged_staff_name'])) {
                                     // Display the logged-in staff ID and name
                                     echo "Staff ID: " . $_SESSION['logged_account_id'] . "<br>";
-                                    echo "Staff Name: " . $_SESSION['logged_staff_name'];
+                                    echo "Staff Name: " . $_SESSION['logged_staff_name']. "<br>";
+                                    echo "Role: " . $_SESSION['role'];
                                     
                                 } else {
                                     // If session variables are not set, display a default message or handle as needed

@@ -219,55 +219,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="register-container">
-        <div class="register_wrapper"> 
-            <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a><br>
-        
-            <form action="register.php" method="post">
-                <!-- Email Field -->
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="text" name="email" class="form-control" placeholder="Enter Email"
-                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
-                    <span class="text-danger"><?php echo $email_err; ?></span>
-                </div>
+    <div class="register_wrapper"> 
+        <a class="nav-link" href="../home/home.php#hero"> <h1 class="text-center" style="font-family:Copperplate; color:white;"> JOHNNY'S</h1><span class="sr-only"></span></a><br>
+       
+        <form action="register.php" method="post">
+            <!-- Email Field -->
+            <div class="form-group">
+                <label>Email</label>
+                <input type="text" name="email" class="form-control" placeholder="Enter Email"
+                       value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+                <span class="text-danger"><?php echo $email_err; ?></span>
+            </div>
 
-                <!-- Member Name Field -->
-                <div class="form-group">
-                    <label>Member Name</label>
-                    <input type="text" name="member_name" class="form-control" placeholder="Enter Member Name"
-                        value="<?php echo isset($_POST['member_name']) ? htmlspecialchars($_POST['member_name']) : ''; ?>">
-                    <span class="text-danger"><?php echo $member_name_err; ?></span>
-                </div>
+            <!-- Member Name Field -->
+            <div class="form-group">
+                <label>Member Name</label>
+                <input type="text" name="member_name" class="form-control" placeholder="Enter Member Name"
+                       value="<?php echo isset($_POST['member_name']) ? htmlspecialchars($_POST['member_name']) : ''; ?>">
+                <span class="text-danger"><?php echo $member_name_err; ?></span>
+            </div>
 
-                <!-- Password Field -->
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" class="form-control" placeholder="Enter Password">
-                    <span class="text-danger"><?php echo $password_err; ?></span>
-                </div>
+            <!-- Password Field -->
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Enter Password">
+                <span class="text-danger"><?php echo $password_err; ?></span>
+            </div>
 
-                <!-- Phone Number Field -->
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="text" name="phone_number" class="form-control" placeholder="Enter Phone Number"
-                        value="<?php echo isset($_POST['phone_number']) ? htmlspecialchars($_POST['phone_number']) : ''; ?>">
-                    <span class="text-danger"><?php echo $phone_number_err; ?></span>
-                </div>
+            <!-- Phone Number Field -->
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone_number" class="form-control" placeholder="Enter Phone Number"
+                       value="<?php echo isset($_POST['phone_number']) ? htmlspecialchars($_POST['phone_number']) : ''; ?>">
+                <span class="text-danger"><?php echo $phone_number_err; ?></span>
+            </div>
 
-                <!-- Data Privacy Checkbox -->
-                <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="data_privacy" name="data_privacy">
-                    <label class="form-check-label" for="data_privacy">I agree to the <a href="../privacyPolicy.html" target="_blank">Data Privacy Policy</a></label>
-                    <span class="text-danger"><?php echo $data_privacy_err; ?></span>
-                </div>
+            <!-- Data Privacy Checkbox -->
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="data_privacy" name="data_privacy">
+                <label class="form-check-label" for="data_privacy">I agree to the <a href="../privacyPolicy.html" target="_blank">Data Privacy Policy</a></label>
+                <span class="text-danger"><?php echo $data_privacy_err; ?></span>
+            </div>
 
-                <!-- Submit Button -->
-                <div class="form-group">
-                    <input type="submit" class="btn btn-primary btn-block" value="Create Account">
-                </div>
-                <p>Already have an account? <a href="login.php">Login here</a></p>
-            </form>
-        </div>
+            <!-- Submit Button -->
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary btn-block" value="Create Account">
+            </div>
+            <p>Already have an account? <a href="login.php">Login here</a></p>
+        </form>
+    </div>
     </div>
 </body>
 </html>

@@ -1,5 +1,32 @@
 <?php
 session_start(); // Ensure session is started
+
+$timeout_duration = 300; // 5 minutes
+
+// Check if the user is logged in
+if (isset($_SESSION['logged_account_id'])) {
+    // Check if the last activity time is set
+    if (isset($_SESSION['last_activity'])) {
+        // Calculate the session's lifetime
+        $session_life = time() - $_SESSION['last_activity'];
+        
+        // If the session has expired, destroy the session and redirect to login
+        if ($session_life > $timeout_duration) {
+            session_unset(); // Unset all session variables
+            session_destroy(); // Destroy the session
+            header("Location: ../sessionTimedOut.php");
+            exit;
+        }
+    }
+    // Update the last activity time
+    $_SESSION['last_activity'] = time(); // Update last activity time to current time
+} else {
+    // User is not logged in, redirect to login page
+    header("Location: login.php");
+    exit;
+}
+
+
 require_once '../posBackend/checkIfLoggedIn.php';
 ?>
 <?php  include '../inc/dashHeader.php'?>   
@@ -10,10 +37,13 @@ require_once '../posBackend/checkIfLoggedIn.php';
         <div class="container-fluid pt-5 pl-600">
             <div class="row">
                 <div class="m-50">
+                <h2 class="pull-left">Table Details</h2>
+                    <?php if ($_SESSION['role'] == 'Manager') : ?>
                     <div class="mt-5 mb-3">
-                        <h2 class="pull-left">Table Details</h2>
                         <a href="../tableCrud/createTable.php" class="btn btn-outline-dark"><i class="fa fa-plus"></i> Add Table</a>
                     </div>
+                    <?php endif; ?>
+                
                     <div class="mb-3">
                     <form method="POST" action="#">
                         <div class="row">

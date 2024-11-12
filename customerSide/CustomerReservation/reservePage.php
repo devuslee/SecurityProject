@@ -3,6 +3,7 @@ require_once '../config.php';
 
 // Start the session
 session_start();
+
 // Set the timezone to Malaysia Time (Asia/Kuala_Lumpur)
 date_default_timezone_set('Asia/Kuala_Lumpur');
 ?>
@@ -38,18 +39,22 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 </head>
 <body>
     <?php
-        $reservationStatus = $_GET['reservation'] ?? null;
+        // XSS prevention by escaping all outputs
+        $reservationStatus = htmlspecialchars($_GET['reservation'] ?? null, ENT_QUOTES, 'UTF-8');
         $message = '';
         if ($reservationStatus === 'success') {
             $message = "Reservation successful";
-            $reservation_id = $_GET['reservation_id'] ?? null;
+            $reservation_id = htmlspecialchars($_GET['reservation_id'] ?? null, ENT_QUOTES, 'UTF-8');
             echo '<a class="nav-link" href="../home/home.php#hero">' . 
             '<h1 class="text-center" style="font-family: Copperplate; color: whitesmoke;">JOHNNY\'S</h1>' . 
             '<span class="sr-only"></span></a>';
             echo '<script>alert("Table Successfully Reserved. Click OK to view your reservation receipt."); window.location.href = "reservationReceipt.php?reservation_id=' . $reservation_id . '";</script>';
         }
-        $head_count = $_GET['head_count'] ?? 1;
+
+        // Sanitize the head_count value to prevent XSS
+        $head_count = htmlspecialchars($_GET['head_count'] ?? 1, ENT_QUOTES, 'UTF-8');
     ?>
+
     <div class="member-info"></div>
     <div class="reserve-container">
         <a class="nav-link" href="../home/home.php#hero">
@@ -61,7 +66,7 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
             <div class="column">
                 <div id="Search Table">
                     <h2 style=" color:white;">Search for Time</h2>
-
+                 
                     <form id="reservation-form" method="GET" action="availability.php"><br>
                         <div class="form-group">
                             <label for="reservation_date" style="">Select Date</label><br>
@@ -81,17 +86,19 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
                                 echo '<select name="reservation_time" id="reservation_time" style="width:10em;" class="form-control" >';
                                 echo '<option value="" selected disabled>Select a Time</option>';
                                 foreach ($availableTimes as $time) {
-                                    echo "<option  value='$time'>$time</option>";
+                                    echo "<option value='" . htmlspecialchars($time, ENT_QUOTES, 'UTF-8') . "'>$time</option>";
                                 }
                                 echo '</select>';
+
+                                // Sanitize any error messages
                                 if (isset($_GET['message'])) {
-                                    $message = $_GET['message'];
+                                    $message = htmlspecialchars($_GET['message'], ENT_QUOTES, 'UTF-8');
                                     echo "<p>$message</p>";
                                 }
                                 ?>
                             </div>
                         </div>
-
+              
                         <input type="number" id="head_count" name="head_count" value=1 hidden required>
                         <button type="submit" style="background-color: black; color: rgb(234, 234, 234); " class="btn" name="submit" >Search</button>
                     </form>
@@ -108,10 +115,11 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
                             <input class="form-control" type="text" id="customer_name" name="customer_name" required>
                         </div>
                         <?php
-                        $defaultReservationDate = $_GET['reservation_date'] ?? date("Y-m-d");
-                        $defaultReservationTime = $_GET['reservation_time'] ?? "13:00:00";
+                        // XSS Prevention: sanitize the default values in case they're pulled from user input
+                        $defaultReservationDate = htmlspecialchars($_GET['reservation_date'] ?? date("Y-m-d"), ENT_QUOTES, 'UTF-8');
+                        $defaultReservationTime = htmlspecialchars($_GET['reservation_time'] ?? "13:00:00", ENT_QUOTES, 'UTF-8');
                         ?>
-
+                   
                         <div class="form-group " >
                             <label for="reservation_date" style="">Reservation Date</label><br>
                             <input type="date" id="reservation_date" name="reservation_date"
@@ -119,14 +127,14 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
                             <input type="time" id="reservation_time" name="reservation_time"
                                    value="<?= $defaultReservationTime ?>" readonly required>
                         </div>
-
+                 
                         <div class="form-group">
                             <label for="table_id_reserve" style="">Available Tables</label>
                             <select class="form-control" name="table_id" id="table_id_reserve" style="width:10em;" required>
                                 <option value="" selected disabled>Select a Table</option>
                                 <?php
-                                $table_id_list = $_GET['reserved_table_id'];
-                                $head_count = $_GET['head_count'] ?? 1;
+                                $table_id_list = htmlspecialchars($_GET['reserved_table_id'], ENT_QUOTES, 'UTF-8');
+                                $head_count = htmlspecialchars($_GET['head_count'] ?? 1, ENT_QUOTES, 'UTF-8');
                                 $reserved_table_ids = explode(',', $table_id_list);
                                 $select_query_tables = "SELECT * FROM restaurant_tables WHERE capacity >= '$head_count'";
                                 if (!empty($reserved_table_ids)) {
@@ -137,7 +145,9 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
                                 $resultCheckTables = mysqli_num_rows($result_tables);
                                 if ($resultCheckTables > 0) {
                                     while ($row = mysqli_fetch_assoc($result_tables)) {
-                                        echo '<option value="' . $row['table_id'] . '">For ' . $row['capacity'] . ' people. (Table Id: ' . $row['table_id'] . ')</option>';
+                                        echo '<option value="' . htmlspecialchars($row['table_id'], ENT_QUOTES, 'UTF-8') . 
+                                        '">For ' . htmlspecialchars($row['capacity'], ENT_QUOTES, 'UTF-8') . 
+                                        ' people. (Table Id: ' . htmlspecialchars($row['table_id'], ENT_QUOTES, 'UTF-8') . ')</option>';
                                     }
                                 }  else {
                                     echo '<option disabled>No tables available, please choose another time.</option>';
@@ -147,7 +157,7 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
                             </select>
                             <input type="number" id="head_count" name="head_count" value="<?= $head_count ?>" required hidden>
                         </div>
-
+                 
                         <div class="form-group mb-3">
                             <label for="special_request">Special request</label><br>
                             <textarea class="form-control"  id="special_request" name="special_request"> </textarea><br>

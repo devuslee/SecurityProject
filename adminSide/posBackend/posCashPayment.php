@@ -84,10 +84,10 @@ $reservation_id = $_GET['reservation_id'];
         <div class="col-md-6">
             <h1>Cash Payment</h1>
             <form action="" method="get">
-                <div class="form-group">
-                    <label for="payment_amount">Payment Amount</label>
-                    <input type="number" min="0" step="0.01" id="payment_amount" name="payment_amount" class="form-control" required>
-                </div>
+            <div class="form-group">
+                <label for="payment_amount">Payment Amount</label>
+                <input type="number" min="0" step="0.01" id="payment_amount" name="payment_amount" class="form-control" required>
+            </div>
 
                 <!-- Add hidden input fields for bill_id, staff_id, member_id, and reservation_id -->
                 <input type="hidden" name="bill_id" value="<?php echo $bill_id; ?>">
