@@ -30,25 +30,28 @@
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="../panel/pos-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cash-register"></i></div>
-                                Point of Sale 
-                            </a>
-                            <a class="nav-link" href="../panel/bill-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
-                                Bills
-                            </a>
+                            <?php if ($_SESSION['role'] != 'Chef') : ?>
+                                <a class="nav-link" href="../panel/pos-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-cash-register"></i></div>
+                                    Point of Sale 
+                                </a>
+                                <a class="nav-link" href="../panel/bill-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
+                                    Bills
+                                </a>
+                                <a class="nav-link" href="../panel/menu-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-utensils"></i></div>
+                                    Menu
+                                </a>
+                                <a class="nav-link" href="../panel/reservation-panel.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-book"></i></div>
+                                    Reservations
+                                </a>
+                            <?php endif; ?>
+
                             <a class="nav-link" href="../panel/table-panel.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-table-cells"></i></div>
                                 Table
-                            </a>
-                            <a class="nav-link" href="../panel/menu-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-utensils"></i></div>
-                                Menu
-                            </a>
-                            <a class="nav-link" href="../panel/reservation-panel.php">
-                                <div class="sb-nav-link-icon"><i class="fas fa-book"></i></div>
-                                Reservations
                             </a>
                             <a class="nav-link" href="../panel/customer-panel.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-person-shelter"></i></div>
