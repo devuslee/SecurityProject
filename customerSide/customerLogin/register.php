@@ -259,7 +259,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <!-- Data Privacy Checkbox -->
                 <div class="form-group form-check">
                     <input type="checkbox" class="form-check-input" id="data_privacy" name="data_privacy">
-                    <label class="form-check-label" for="data_privacy">I agree to the <a href=".../privacy_policy.html"
+                    <label class="form-check-label" for="data_privacy">I agree to the <a href="./privacy_policy.php"
                             target="_blank">Data Privacy Policy</a></label>
                     <span class="text-danger"><?php echo $data_privacy_err; ?></span>
                 </div>
