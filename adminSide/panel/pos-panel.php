@@ -1,7 +1,7 @@
 <?php
 session_start(); // Ensure session is started
 
-$timeout_duration = 300; // 5 minutes
+$timeout_duration = 300; // 15 minutes
 
 // Check if the user is logged in
 if (isset($_SESSION['logged_account_id'])) {

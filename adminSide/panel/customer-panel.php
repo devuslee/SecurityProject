@@ -73,7 +73,15 @@ require_once '../posBackend/checkIfLoggedIn.php';
                                 WHERE M.member_name LIKE '%$search%' OR M.member_id = '$search'
                                 ORDER BY M.member_id";
                          */
-                        $sql = "SELECT * FROM Memberships WHERE member_name LIKE '%$search%' OR member_id = '$search'ORDER BY member_id";
+                        // Using a prepared statement
+                        $stmt = $link->prepare("SELECT * FROM Memberships WHERE member_name LIKE CONCAT('%', ?, '%') OR member_id = ?");
+                        $stmt->bind_param("ss", $search, $search); // Bind the parameter
+
+                        // Execute the statement
+                        $stmt->execute();
+
+                        // Get the result set
+                        $result = $stmt->get_result(); 
                     } else {
                         // Default query to fetch all memberships with account information
                          /* 
@@ -84,7 +92,9 @@ require_once '../posBackend/checkIfLoggedIn.php';
                                 ORDER BY M.member_id";
                          * 
                          */
+                        // Default query to fetch all memberships if no search is provided
                         $sql = "SELECT * FROM Memberships ORDER BY member_id";
+                        $result = mysqli_query($link, $sql);
                     }
                 } else {
                     // Default query to fetch all memberships with account information
@@ -95,11 +105,13 @@ require_once '../posBackend/checkIfLoggedIn.php';
                             ORDER BY M.member_id";
                      * 
                      */
+                     // Default query to fetch all memberships if no search is provided
                      $sql = "SELECT * FROM Memberships ORDER BY member_id";
+                     $result = mysqli_query($link, $sql);
                 }
 
 
-                if ($result = mysqli_query($link, $sql)) {
+                if ($result) {
                     if (mysqli_num_rows($result) > 0) {
                         echo '<table class="table table-bordered table-striped">';
                         echo "<thead>";

@@ -9,6 +9,6 @@
 <body>
     <h1>Access Denied</h1>
     <p>You do not have permission to access this page.</p>
-    <a href="../panel/pos-panel.php">Go back to Dashboard</a>
+    <a href="../adminSide/panel/pos-panel.php">Go back to Dashboard</a>
 </body>
 </html>

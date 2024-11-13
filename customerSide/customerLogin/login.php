@@ -3,15 +3,16 @@
 require_once '../config.php';
 session_start();
 
-// Define the logging function
-function logUserAction($user_id, $action, $page_url) {
+// Define the logging function with username and session dates
+function logUserAction($user_id, $username, $action, $page_url, $start_session_date, $end_session_date) {
     global $link;
 
     $ip_address = $_SERVER['REMOTE_ADDR'];
     $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
-    $stmt = $link->prepare("INSERT INTO user_logs (user_id, action, page_url, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("issss", $user_id, $action, $page_url, $ip_address, $user_agent);
+    // Insert log with start and end session dates
+    $stmt = $link->prepare("INSERT INTO user_logs (user_id, username, action, page_url, ip_address, user_agent, start_session_date, end_session_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssssss", $user_id, $username, $action, $page_url, $ip_address, $user_agent, $start_session_date, $end_session_date);
     $stmt->execute();
     $stmt->close();
 }
@@ -20,7 +21,7 @@ function logUserAction($user_id, $action, $page_url) {
 $email = $password = "";
 $email_err = $password_err = "";
 
-// Check if the form was submitted.
+// Check if the form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate email
     if (empty(trim($_POST["email"]))) {
@@ -40,7 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($email_err) && empty($password_err)) {
         // Prepare a select statement
         $sql = "SELECT * FROM Accounts WHERE email = ?";
-
         if ($stmt = mysqli_prepare($link, $sql)) {
             // Bind variables to the prepared statement as parameters
             mysqli_stmt_bind_param($stmt, "s", $param_email);
@@ -48,31 +48,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Set parameters
             $param_email = $email;
 
-            // Attempt to execute the prepared statement
+            // Execute the prepared statement
             if (mysqli_stmt_execute($stmt)) {
                 // Get the result
                 $result = mysqli_stmt_get_result($stmt);
 
-                // Check if a matching record was found.
+                // Check if a matching record was found
                 if (mysqli_num_rows($result) == 1) {
                     // Fetch the result row
                     $row = mysqli_fetch_assoc($result);
+                    $account_id = $row['account_id']; // Store account ID for logging
+                    $username = !empty($row['username']) ? $row['username'] : 'Customer'; 
 
                     // Check if the account is verified
                     if ($row["is_verified"] == 0) {
                         $email_err = "Your account has not been verified. Please check your email to verify your account.";
-                        logUserAction(null, 'Login failed - account not verified', 'login.php');
+                        $start_end_time = date("Y-m-d H:i:s");
+                        logUserAction($account_id, 'Customer', 'Login failed - account not verified', 'login.php', $start_end_time, $start_end_time);
                     } else {
                         // Verify the password
                         if (password_verify($password, $row["password"])) {
+                            // Set session variables
                             $_SESSION["loggedin"] = true;
                             $_SESSION["email"] = $email;
+                            $_SESSION["account_id"] = $account_id;
+                            $_SESSION["username"] = $username;
+                            $_SESSION["start_session_date"] = date("Y-m-d H:i:s"); // Track session start time
 
-                            // Log successful login
-                            logUserAction($row['account_id'], 'Login successful', 'login.php');
+                            // Log successful login with start session date
+                            logUserAction($account_id, $username, 'Login successful', 'login.php', $_SESSION["start_session_date"], null);
 
                             // Query to get membership details
-                            $sql_member = "SELECT * FROM Memberships WHERE account_id = " . $row['account_id'];
+                            $sql_member = "SELECT * FROM Memberships WHERE account_id = " . $account_id;
                             $result_member = mysqli_query($link, $sql_member);
 
                             if ($result_member) {
@@ -93,13 +100,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         } else {
                             // Password is incorrect
                             $password_err = "Invalid password. Please try again.";
-                            logUserAction($row['account_id'], 'Login failed - invalid password', 'login.php');
+                            $start_end_time = date("Y-m-d H:i:s");
+                            logUserAction($account_id, 'Customer', 'Login failed - invalid password', 'login.php', $start_end_time, $start_end_time);
                         }
                     }
                 } else {
                     // No matching records found
                     $email_err = "No account found with this email.";
-                    logUserAction(null, 'Login failed - email not found', 'login.php');
+                    $start_end_time = date("Y-m-d H:i:s");
+                    logUserAction(null, 'Customer', 'Login failed - email not found', 'login.php', $start_end_time, $start_end_time);
                 }
             } else {
                 echo "Oops! Something went wrong. Please try again later.";
@@ -110,6 +119,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+
+// Close the database connection
+$link->close();
 ?>
 
 <!DOCTYPE html>
@@ -121,10 +133,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         .login-container {
-            padding: 50px; /* Adjust the padding as needed */
-            border-radius: 10px; /* Add rounded corners */
-            margin: 100px auto; /* Center the container horizontally */
-            max-width: 500px; /* Set a maximum width for the container */
+            padding: 50px;
+            border-radius: 10px;
+            margin: 100px auto;
+            max-width: 500px;
         }
 
         body {
@@ -133,9 +145,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0; /* Remove default margin */
+            margin: 0;
             background-color: black;
-            background-image: url('../image/loginBackground.jpg'); /* Set the background image path */
+            background-image: url('../image/loginBackground.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -144,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .login_wrapper {
-            width: 400px; /* Adjust the container width as needed */
+            width: 400px;
             padding: 20px;
         }
 
@@ -158,11 +170,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .form-group {
-            margin-bottom: 15px; /* Add space between form elements */
+            margin-bottom: 15px;
         }
 
         ::placeholder {
-            font-size: 12px; /* Adjust the font size as needed */
+            font-size: 12px;
         }
 
         .text-danger {

@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Include database connection
 require_once 'C:\xampp\htdocs\SecurityProject\adminSide\config.php';
 
@@ -6,7 +7,7 @@ function getLogs($user_id = null, $start_date = null, $end_date = null) {
     global $link;
 
     // Base query
-    $query = "SELECT * FROM user_logs WHERE 1=1";
+    $query = "SELECT id, user_id, username, action, page_url, ip_address, user_agent, start_session_date, end_session_date FROM user_logs WHERE 1=1";
     
     // Parameters array for binding
     $params = [];
@@ -21,7 +22,7 @@ function getLogs($user_id = null, $start_date = null, $end_date = null) {
 
     // Add date filter if provided
     if (!empty($start_date) && !empty($end_date)) {
-        $query .= " AND DATE(created_at) BETWEEN ? AND ?";
+        $query .= " AND DATE(start_session_date) BETWEEN ? AND ?";
         $params[] = $start_date;
         $params[] = $end_date;
         $types .= "ss";
@@ -141,11 +142,13 @@ $logs = getLogs($user_id, $start_date, $end_date);
                 <tr>
                     <th>ID</th>
                     <th>User ID</th>
+                    <th>Username</th>
                     <th>Action</th>
                     <th>Page URL</th>
                     <th>IP Address</th>
                     <th>User Agent</th>
-                    <th>Date</th>
+                    <th>Session Start Date</th>
+                    <th>Session End Date</th>
                 </tr>
             </thead>
             <tbody>
@@ -154,16 +157,18 @@ $logs = getLogs($user_id, $start_date, $end_date);
                         <tr>
                             <td><?php echo htmlspecialchars($log['id']); ?></td>
                             <td><?php echo htmlspecialchars($log['user_id']); ?></td>
+                            <td><?php echo htmlspecialchars($log['username']); ?></td>
                             <td><?php echo htmlspecialchars($log['action']); ?></td>
                             <td><?php echo htmlspecialchars($log['page_url']); ?></td>
                             <td><?php echo htmlspecialchars($log['ip_address']); ?></td>
                             <td><?php echo htmlspecialchars($log['user_agent']); ?></td>
-                            <td><?php echo htmlspecialchars($log['created_at']); ?></td>
+                            <td><?php echo htmlspecialchars($log['start_session_date']); ?></td>
+                            <td><?php echo htmlspecialchars($log['end_session_date']); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="text-center">No logs found.</td>
+                        <td colspan="9" class="text-center">No logs found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

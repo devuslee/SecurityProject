@@ -67,17 +67,29 @@ require_once '../posBackend/checkIfLoggedIn.php';
                 // Get today's date (in Malaysia time)
                 $today = date('Y-m-d');
 
-                // Default query to fetch all reservations
-                $sql = "SELECT * FROM reservations ORDER BY reservation_date DESC, reservation_time DESC;";
-
                 // Search logic
                 if (isset($_POST['search']) && !empty($_POST['search'])) {
                     $search = $_POST['search'];
-                    $sql = "SELECT * FROM reservations WHERE reservation_date LIKE '%$search%' OR reservation_id LIKE '%$search%' OR customer_name LIKE '%$search%'";
+                    
+                    // Using a prepared statement
+                    $stmt = $link->prepare("SELECT * FROM reservations WHERE reservation_date LIKE CONCAT('%', ?, '%') OR reservation_id = ? OR customer_name LIKE CONCAT('%', ?, '%')");
+                    $stmt->bind_param("sss", $search, $search, $search); // Bind the parameter
+
+                    // Execute the statement
+                    $stmt->execute();
+
+                    // Get the result set
+                    $result = $stmt->get_result(); 
+                }
+
+                else {
+                    // Default query to fetch all reservations
+                    $sql = "SELECT * FROM reservations ORDER BY reservation_date DESC, reservation_time DESC;";
+                    $result = mysqli_query($link, $sql);
                 }
 
                 // Execute the query
-                if ($result = mysqli_query($link, $sql)) {
+                if ($result) {
                     // Arrays to hold upcoming and past reservations
                     $upcomingReservations = [];
                     $pastReservations = [];

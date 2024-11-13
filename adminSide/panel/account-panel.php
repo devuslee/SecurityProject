@@ -74,24 +74,27 @@ require_once '../posBackend/checkIfLoggedIn.php';
                     if (!empty($_POST['search'])) {
                         $search = $_POST['search'];
 
-                        $sql = "SELECT *
-                                FROM Accounts
-                                WHERE email LIKE '%$search%' OR account_id LIKE '%$search%'
-                                ORDER BY account_id;";
+                        // Using a prepared statement
+                        $stmt = $link->prepare("SELECT * FROM Accounts WHERE email LIKE CONCAT('%', ?, '%') OR account_id = ?");
+                        $stmt->bind_param("ss", $search, $search); // Bind the parameter
+
+                        // Execute the statement
+                        $stmt->execute();
+
+                        // Get the result set
+                        $result = $stmt->get_result(); 
                     } else {
                         // Default query to fetch all accounts
-                        $sql = "SELECT *
-                                FROM Accounts
-                                ORDER BY account_id;";
+                        $sql = "SELECT * FROM Accounts ORDER BY account_id";
+                        $result = mysqli_query($link, $sql);
                     }
                 } else {
                     // Default query to fetch all accounts
-                    $sql = "SELECT *
-                            FROM Accounts
-                            ORDER BY account_id;";
+                    $sql = "SELECT * FROM Accounts ORDER BY account_id";
+                    $result = mysqli_query($link, $sql);
                 }
 
-                if ($result = mysqli_query($link, $sql)) {
+                if ($result) {
                     if (mysqli_num_rows($result) > 0) {
                         echo '<table class="table table-bordered table-striped">';
                         echo "<thead>";

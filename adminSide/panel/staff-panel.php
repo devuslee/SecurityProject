@@ -80,7 +80,15 @@ require_once '../posBackend/checkIfLoggedIn.php';
                                 ORDER BY stf.staff_id";
                          * 
                          */
-                        $sql = "SELECT * FROM Staffs WHERE staff_name LIKE '%$search%' OR staff_id = '$search' ORDER BY account_id";
+                        // Using a prepared statement
+                        $stmt = $link->prepare("SELECT * FROM Staffs WHERE staff_name LIKE CONCAT('%', ?, '%') OR staff_id = ?");
+                        $stmt->bind_param("ss", $search, $search); // Bind the parameter
+
+                        // Execute the statement
+                        $stmt->execute();
+
+                        // Get the result set
+                        $result = $stmt->get_result(); 
                     } else {
                         // Default query to fetch all staff members
                         /*
@@ -91,6 +99,7 @@ require_once '../posBackend/checkIfLoggedIn.php';
                          * 
                          */
                         $sql = "SELECT * FROM Staffs ORDER BY account_id";
+                        $result = mysqli_query($link, $sql);
                     }
                 } else {
                     // Default query to fetch all staff members
@@ -102,10 +111,11 @@ require_once '../posBackend/checkIfLoggedIn.php';
                      * 
                      */
                     $sql = "SELECT * FROM Staffs ORDER BY account_id";
+                    $result = mysqli_query($link, $sql);
                 }
 
 
-                if ($result = mysqli_query($link, $sql)) {
+                if ($result) {
                     if (mysqli_num_rows($result) > 0) {
                         echo '<table class="table table-bordered table-striped">';
                         echo "<thead>";

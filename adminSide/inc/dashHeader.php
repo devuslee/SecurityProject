@@ -91,17 +91,15 @@
                                     <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
                                     Member Profiles
                                 </a>
-                                
-
+                                <a class="nav-link" href="../panel/display_logs.php">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+                                    Logs Activity
+                                </a>
                             <?php endif; ?>
                             <a class="nav-link" href="../StaffLogin/logout.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
                                 Log out
                             </a>
-                            <a class="nav-link" href="../panel/display_logs.php">
-                                    <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                    Logs Activity
-                                </a>
                         
                         </div>
                     </div>

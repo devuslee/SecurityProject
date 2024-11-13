@@ -60,18 +60,25 @@ function createNewBillRecord($table_id) {
                         if (isset($_POST['search'])) {
                             if (!empty($_POST['search'])) {
                                 $search = $_POST['search'];
-
-                                $query = "SELECT * FROM Menu WHERE item_type LIKE '%$search%' OR item_category LIKE '%$search%' OR item_name LIKE '%$search%' OR item_id LIKE '%$search%' ORDER BY item_id;";
-                                $result = mysqli_query($link, $query);
-                            }else{
+                        
+                                // Using a prepared statement
+                                $stmt = $link->prepare("SELECT * FROM Menu WHERE item_type LIKE CONCAT('%', ?, '%') OR item_category LIKE CONCAT('%', ?, '%') OR item_name LIKE CONCAT('%', ?, '%') OR item_id LIKE CONCAT('%', ?, '%')");
+                                $stmt->bind_param("ssss", $search, $search, $search, $search); // Bind the parameter for all placeholders
+                        
+                                // Execute the statement
+                                $stmt->execute();
+                        
+                                // Get the result set
+                                $result = $stmt->get_result(); 
+                            } else {
                                 // Default query to fetch all menu items
                                 $query = "SELECT * FROM Menu ORDER BY item_id;";
-                                $result = mysqli_query($link, $query);
+                                $result = mysqli_query($link, $query); // Use $query instead of $sql
                             }
                         } else {
                             // Default query to fetch all menu items
                             $query = "SELECT * FROM Menu ORDER BY item_id;";
-                            $result = mysqli_query($link, $query);
+                            $result = mysqli_query($link, $query); // Use $query instead of $sql
                         }
                         $bill_id = $_GET['bill_id'];
                         if ($result) {

@@ -67,27 +67,34 @@ require_once '../posBackend/checkIfLoggedIn.php';
                     if (!empty($_POST['search'])) {
                         $search = $_POST['search'];
 
-                        $sql = "SELECT *
-                                FROM Restaurant_Tables
-                                WHERE table_id LIKE '%$search%' OR capacity LIKE '%$search%' 
-                                ORDER BY table_id;";
+                        // Using a prepared statement
+                        $stmt = $link->prepare("SELECT * FROM Restaurant_Tables WHERE table_id = ? OR capacity = ?");
+                        $stmt->bind_param("ss", $search, $search); // Bind the parameter
+
+                        // Execute the statement
+                        $stmt->execute();
+
+                        // Get the result set
+                        $result = $stmt->get_result(); 
                     } else {
                         // Default query to fetch all Restaurant_tables
                         $sql = "SELECT *
                                 FROM Restaurant_Tables
                                 ORDER BY table_id;";
+                        $result = mysqli_query($link, $sql);
                     }
                 } else {
                     // Default query to fetch all Restaurant_tables
                     $sql = "SELECT *
                             FROM Restaurant_Tables
                             ORDER BY table_id;";
+                    $result = mysqli_query($link, $sql);
                 }
 
 
                     // Attempt select query execution
                     //$sql = "SELECT * FROM Restaurant_Tables ORDER BY table_id;";
-                    if($result = mysqli_query($link, $sql)){
+                    if($result){
                         if(mysqli_num_rows($result) > 0){
                             echo '<table class="table table-bordered table-striped">';
                                 echo "<thead>";

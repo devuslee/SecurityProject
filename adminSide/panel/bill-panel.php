@@ -63,16 +63,26 @@ require_once '../posBackend/checkIfLoggedIn.php';
                     if (!empty($_POST['search'])) {
                         $search = $_POST['search'];
                         
-                        $sql = "SELECT * FROM Bills WHERE table_id LIKE '%$search%' OR payment_method LIKE '%$search%' OR bill_id LIKE '%$search%' OR card_id LIKE '%$search%'";
+                        // Using a prepared statement
+                        $stmt = $link->prepare("SELECT * FROM Bills WHERE payment_method LIKE CONCAT('%', ?, '%') OR table_id = ? OR bill_id = ? OR card_id = ?");
+                        $stmt->bind_param("ssss", $search, $search, $search, $search); // Bind the parameter
+
+                        // Execute the statement
+                        $stmt->execute();
+
+                        // Get the result set
+                        $result = $stmt->get_result(); 
                     } else {
                         // Default query to fetch all bills
-                        $sql = "SELECT * FROM Bills ORDER BY bill_id;";
+                        $sql = "SELECT * FROM Bills ORDER BY bill_id";
+                        $result = mysqli_query($link, $sql);
                     }
                 } else {
-                    $sql = "SELECT * FROM Bills ORDER BY bill_id;";
+                    $sql = "SELECT * FROM Bills ORDER BY bill_id";
+                    $result = mysqli_query($link, $sql);
                 }
                 
-                if ($result = mysqli_query($link, $sql)) {
+                if ($result) {
                     if (mysqli_num_rows($result) > 0) {
                         echo '<table class="table table-bordered table-striped" >';
                         echo "<thead>";
