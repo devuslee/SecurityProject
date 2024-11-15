@@ -24,9 +24,8 @@
  - SQL Injection
  - Cross-Site Scripting (XSS) Protection
  - Logging
- - CSRF 
 
-
+## *User Manual*
 **Steps to run the project locally for Netbeans Manually:**
 
 1. Open XAMPP, start Apache and MySQL.
